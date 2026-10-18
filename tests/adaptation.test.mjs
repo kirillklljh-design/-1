@@ -50,7 +50,7 @@ test("Проверка Origin не доверяет постороннему с�
 test("Фотографии из слайдов используют статические ресурсы, загрузки — media", () => {
   assert.equal(isReferencePhoto("reference-truck"), true);
   assert.equal(isReferencePhoto("reference-arbitrary"), false);
-  assert.equal(photoUrl("reference-loader"), "/assets/photos/loader.svg");
+  assert.equal(photoUrl("reference-loader"), "/assets/photos/loader-restored.png");
   assert.equal(photoUrl("abc.png"), "/media/abc.png");
 });
 test("Формат фото определяется по сигнатуре и совпадающему MIME", () => {
