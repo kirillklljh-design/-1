@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Truck, Send, ArrowUpRight, X, MapPin, Calculator } from "lucide-react";
 import { siteConfig } from "./config";
+import { photoUrl } from "./photo";
 
 export function Brand({ small = false }: { small?: boolean }) {
   return (
@@ -253,7 +254,7 @@ export function MachineImage({
     <div className={`machine-image art-${type}`}>
       {imageKey ? (
         <img
-          src={`/media/${imageKey}`}
+          src={photoUrl(imageKey)}
           alt={name}
           loading="lazy"
           onError={(e) => {

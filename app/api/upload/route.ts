@@ -1,68 +1,49 @@
-import { env } from "cloudflare:workers";
 import { authorizeWrite } from "../../../src/server";
+import { serverSupabase } from "../../../src/supabase/server";
+import { PHOTO_BUCKET } from "../../../src/supabase/config";
+import { MAX_PHOTO_SIZE } from "../../../src/photo";
+// The file is uploaded directly to Supabase, bypassing Vercel's 4.5 MB request limit.
 export async function POST(request: Request) {
   const denied = await authorizeWrite(request);
   if (denied) return denied;
-  if (
-    Number(request.headers.get("content-length") || 0) >
-    5 * 1024 * 1024 + 8192
-  )
-    return Response.json(
-      { error: "Фото должно быть не больше 5 МБ." },
-      { status: 413 },
-    );
   try {
-    const form = await request.formData();
-    const file = form.get("file");
+    const text = await request.text();
+    if (text.length > 1024)
+      return Response.json(
+        { error: "Слишком большой запрос." },
+        { status: 413 },
+      );
+    const { type, size } = JSON.parse(text);
+    const extension = (
+      {
+        "image/jpeg": "jpg",
+        "image/png": "png",
+        "image/webp": "webp",
+      } as Record<string, string>
+    )[type];
     if (
-      !(file instanceof File) ||
-      file.size === 0 ||
-      file.size > 5 * 1024 * 1024
+      !extension ||
+      !Number.isSafeInteger(size) ||
+      size <= 0 ||
+      size > MAX_PHOTO_SIZE
     )
       return Response.json(
-        { error: "Выберите фото до 5 МБ." },
+        { error: "Выберите JPG, PNG или WebP до 5 МБ." },
         { status: 400 },
       );
-    const bytes = new Uint8Array(await file.arrayBuffer());
-    let ext = "";
-    if (
-      bytes[0] === 0xff &&
-      bytes[1] === 0xd8 &&
-      bytes[2] === 0xff &&
-      file.type === "image/jpeg"
-    )
-      ext = "jpg";
-    if (
-      bytes[0] === 137 &&
-      bytes[1] === 80 &&
-      bytes[2] === 78 &&
-      bytes[3] === 71 &&
-      bytes[4] === 13 &&
-      bytes[5] === 10 &&
-      bytes[6] === 26 &&
-      bytes[7] === 10 &&
-      file.type === "image/png"
-    )
-      ext = "png";
-    if (
-      String.fromCharCode(...bytes.slice(0, 4)) === "RIFF" &&
-      String.fromCharCode(...bytes.slice(8, 12)) === "WEBP" &&
-      file.type === "image/webp"
-    )
-      ext = "webp";
-    if (!ext)
-      return Response.json(
-        { error: "Поддерживаются фотографии JPG, PNG и WebP." },
-        { status: 400 },
-      );
-    const key = `${crypto.randomUUID()}.${ext}`;
-    await env.BUCKET!.put(key, bytes, {
-      httpMetadata: { contentType: file.type },
-    });
-    return Response.json({ key });
+    const key = `${crypto.randomUUID()}.${extension}`;
+    const db = await serverSupabase();
+    const { data, error } = await db.storage
+      .from(PHOTO_BUCKET)
+      .createSignedUploadUrl(key);
+    if (error || !data) throw error;
+    return Response.json(
+      { key, token: data.token },
+      { headers: { "Cache-Control": "private, no-store" } },
+    );
   } catch {
     return Response.json(
-      { error: "Не удалось загрузить фото. Попробуйте ещё раз." },
+      { error: "Не удалось подготовить загрузку фото. Попробуйте ещё раз." },
       { status: 503 },
     );
   }

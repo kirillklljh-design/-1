@@ -1,3 +1,4 @@
+import { isReferencePhoto } from "./photo.ts";
 export type Machine = {
   id: string;
   name: string;
@@ -15,7 +16,7 @@ export const seedMachines: Machine[] = [
     description: "Траншеи, фундамент и работы в ограниченном пространстве",
     rate: 2500,
     minHours: 4,
-    imageKey: null,
+    imageKey: "reference-mini",
     visible: true,
     sortOrder: 0,
   },
@@ -25,7 +26,7 @@ export const seedMachines: Machine[] = [
     description: "Котлованы, демонтаж и большие объёмы грунта",
     rate: 3800,
     minHours: 8,
-    imageKey: null,
+    imageKey: "reference-excavator",
     visible: true,
     sortOrder: 1,
   },
@@ -35,7 +36,7 @@ export const seedMachines: Machine[] = [
     description: "Погрузка грунта, планировка и уборка территории",
     rate: 3200,
     minHours: 4,
-    imageKey: null,
+    imageKey: "reference-loader",
     visible: true,
     sortOrder: 2,
   },
@@ -45,7 +46,7 @@ export const seedMachines: Machine[] = [
     description: "Перевозка материалов и погрузочные работы",
     rate: 2800,
     minHours: 4,
-    imageKey: null,
+    imageKey: "reference-truck",
     visible: true,
     sortOrder: 3,
   },
@@ -112,7 +113,8 @@ export function validateMachine(
   if (
     typeof v.minHours !== "number" ||
     !Number.isSafeInteger(v.minHours) ||
-    v.minHours < 1
+    v.minHours < 1 ||
+    v.minHours > 2147483647
   )
     throw new Error("Минимальная смена — целое число от 1 часа.");
   if (typeof v.visible !== "boolean")
@@ -120,7 +122,8 @@ export function validateMachine(
   if (
     v.imageKey !== null &&
     (typeof v.imageKey !== "string" ||
-      !/^[a-f0-9-]+\.(jpg|png|webp)$/.test(v.imageKey))
+      (!isReferencePhoto(v.imageKey) &&
+        !/^[a-f0-9-]+\.(jpg|png|webp)$/.test(v.imageKey)))
   )
     throw new Error("Некорректное фото.");
   return {

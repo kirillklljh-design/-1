@@ -1,8 +1,11 @@
-import { env } from "cloudflare:workers";
-import { eq } from "drizzle-orm";
-import { getDb } from "../../../db";
-import { machines } from "../../../db/schema";
-import { authorizeWrite, isOwner, listMachines } from "../../../src/server";
+import {
+  authorizeWrite,
+  isOwner,
+  listMachines,
+  photoExists,
+  toRow,
+} from "../../../src/server";
+import { serverSupabase } from "../../../src/supabase/server";
 import { validateMachine } from "../../../src/rental";
 export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
@@ -10,8 +13,7 @@ export async function GET(request: Request) {
     const all = new URL(request.url).searchParams.get("all") === "1";
     if (all && !(await isOwner()))
       return Response.json({ error: "Нет доступа." }, { status: 403 });
-    const rows = await listMachines();
-    return Response.json(all ? rows : rows.filter((m) => m.visible), {
+    return Response.json(await listMachines(all), {
       headers: { "Cache-Control": "no-store" },
     });
   } catch {
@@ -33,11 +35,15 @@ export async function DELETE(request: Request) {
 async function mutate(request: Request, action: string) {
   const denied = await authorizeWrite(request);
   if (denied) return denied;
-  if (Number(request.headers.get("content-length") || 0) > 20000)
-    return Response.json({ error: "Слишком большой запрос." }, { status: 413 });
   let raw: Record<string, unknown>;
   try {
-    raw = await request.json();
+    const text = await request.text();
+    if (text.length > 20000)
+      return Response.json(
+        { error: "Слишком большой запрос." },
+        { status: 413 },
+      );
+    raw = JSON.parse(text);
   } catch {
     return Response.json({ error: "Некорректный JSON." }, { status: 400 });
   }
@@ -52,44 +58,39 @@ async function mutate(request: Request, action: string) {
       { status: 400 },
     );
   let data;
-  if (action !== "delete") {
+  if (action !== "delete")
     try {
       data = validateMachine(raw);
     } catch (e) {
       return Response.json({ error: (e as Error).message }, { status: 400 });
     }
-  }
   try {
-    const rows = await listMachines();
-    const existing = rows.find((m) => m.id === raw.id);
-    if (action !== "create" && !existing)
-      return Response.json(
-        { error: "Карточка уже удалена. Обновите список." },
-        { status: 404 },
-      );
-    if (data?.imageKey && !(await env.BUCKET!.head(data.imageKey)))
+    const db = await serverSupabase();
+    if (data?.imageKey && !(await photoExists(data.imageKey)))
       return Response.json(
         { error: "Фото не найдено. Загрузите его повторно." },
         { status: 400 },
       );
-    if (action === "delete")
-      await getDb()
-        .delete(machines)
-        .where(eq(machines.id, raw.id as string));
-    else if (action === "update")
-      await getDb()
-        .update(machines)
-        .set(data!)
-        .where(eq(machines.id, raw.id as string));
-    else
-      await getDb()
-        .insert(machines)
-        .values({
-          ...data!,
-          id: crypto.randomUUID(),
-          sortOrder:
-            rows.reduce((max, m) => Math.max(max, m.sortOrder), -1) + 1,
-        });
+    if (action === "create") {
+      const { error } = await db
+        .from("machines")
+        .insert({ ...toRow(data!), id: crypto.randomUUID() });
+      if (error) throw error;
+    } else {
+      const query =
+        action === "delete"
+          ? db.from("machines").delete()
+          : db.from("machines").update(toRow(data!));
+      const { data: changed, error } = await query
+        .eq("id", raw.id as string)
+        .select("id");
+      if (error) throw error;
+      if (!changed?.length)
+        return Response.json(
+          { error: "Карточка уже удалена. Обновите список." },
+          { status: 404 },
+        );
+    }
     return Response.json({ ok: true });
   } catch {
     return Response.json(

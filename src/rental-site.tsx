@@ -16,13 +16,7 @@ import {
   Send,
   RefreshCw,
 } from "lucide-react";
-import {
-  Brand,
-  Header,
-  MachineArt,
-  MachineImage,
-  TelegramButton,
-} from "./components";
+import { Brand, Header, MachineImage, TelegramButton } from "./components";
 import { siteConfig } from "./config";
 import { calculateRental, Machine, money, todayLocal } from "./rental";
 
@@ -146,9 +140,12 @@ export default function RentalSite() {
               </div>
             </div>
             <div className="hero-visual">
-              <div className="hero-grid" />
-              <span className="hero-art-label">МЕСТО ДЛЯ ВАШЕЙ ФОТОГРАФИИ</span>
-              <MachineArt hero />
+              <img
+                className="hero-photo"
+                src="/assets/photos/hero.svg"
+                alt="Гусеничный экскаватор на строительном объекте"
+                fetchPriority="high"
+              />
               <div className="hero-badge">
                 <ShieldCheck size={25} />
                 <div>

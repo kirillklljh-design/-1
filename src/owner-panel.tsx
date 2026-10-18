@@ -18,6 +18,9 @@ import {
 } from "lucide-react";
 import { Brand, MachineImage } from "./components";
 import { Machine, money, validateMachine } from "./rental";
+import { photoUrl, photoExtension, MAX_PHOTO_SIZE } from "./photo";
+import { browserSupabase } from "./supabase/client";
+import { PHOTO_BUCKET } from "./supabase/config";
 
 export default function OwnerPanel() {
   const [machines, setMachines] = useState<Machine[]>([]),
@@ -115,11 +118,27 @@ export default function OwnerPanel() {
     try {
       let imageKey = editing.imageKey;
       if (file) {
-        const data = new FormData();
-        data.set("file", file);
-        const r = await fetch("/api/upload", { method: "POST", body: data });
-        const result = (await r.json()) as { error?: string; key: string };
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        if (!photoExtension(bytes, file.type) || file.size > MAX_PHOTO_SIZE)
+          throw Error("Выберите корректное фото JPG, PNG или WebP до 5 МБ.");
+        const r = await fetch("/api/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: file.type, size: file.size }),
+        });
+        const result = (await r.json()) as {
+          error?: string;
+          key: string;
+          token: string;
+        };
         if (!r.ok) throw Error(result.error);
+        const { error: uploadError } = await browserSupabase()
+          .storage.from(PHOTO_BUCKET)
+          .uploadToSignedUrl(result.key, result.token, file, {
+            contentType: file.type,
+          });
+        if (uploadError)
+          throw Error("Не удалось загрузить фото. Попробуйте ещё раз.");
         imageKey = result.key;
       }
       await mutate(editing.id ? "PUT" : "POST", { ...editing, imageKey });
@@ -179,15 +198,16 @@ export default function OwnerPanel() {
               <ArrowLeft size={16} />
               <span>Открыть клиентскую страницу</span>
             </a>
-            <a
-              className="btn btn-outline logout"
-              aria-label="Выйти"
-              href="/signout-with-chatgpt?return_to=%2Fowner"
-              target="_top"
-            >
-              <LogOut size={16} />
-              <span>Выйти</span>
-            </a>
+            <form action="/api/auth/logout" method="post">
+              <button
+                className="btn btn-outline logout"
+                aria-label="Выйти"
+                type="submit"
+              >
+                <LogOut size={16} />
+                <span>Выйти</span>
+              </button>
+            </form>
           </div>
         </div>
       </header>
@@ -387,7 +407,7 @@ export default function OwnerPanel() {
                 {preview ? (
                   <img src={preview} alt="Предпросмотр фотографии" />
                 ) : editing.imageKey ? (
-                  <img src={`/media/${editing.imageKey}`} alt={editing.name} />
+                  <img src={photoUrl(editing.imageKey)} alt={editing.name} />
                 ) : (
                   <div className="upload-placeholder">
                     <Upload size={26} />

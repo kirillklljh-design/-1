@@ -355,6 +355,26 @@ p {
   background: linear-gradient(125deg, #20291f 2%, #56604e 60%, #82856c);
   min-width: 0;
 }
+.hero-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 60% center;
+}
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 25px;
+}
+.login-form > .btn {
+  width: 100%;
+}
+.owner-header-actions form {
+  margin: 0;
+}
 .hero-visual:before {
   content: "";
   position: absolute;
