@@ -6,7 +6,6 @@ import {
   ArrowUpRight,
   Check,
   Clock3,
-  Copy,
   HardHat,
   CalendarDays,
   MapPin,
@@ -19,21 +18,20 @@ import {
 import { Brand, Header, MachineImage, TelegramButton } from "./components";
 import { siteConfig } from "./config";
 import { calculateRental, Machine, money, todayLocal } from "./rental";
+import { telegramDraftUrl } from "./telegram";
 
 export default function RentalSite() {
   const [machines, setMachines] = useState<Machine[]>([]),
     [loading, setLoading] = useState(true),
     [error, setError] = useState("");
   const [selected, setSelected] = useState(""),
-    [hours, setHours] = useState("4"),
+    [hours, setHours] = useState("2"),
     [address, setAddress] = useState(""),
     [date, setDate] = useState(""),
     [time, setTime] = useState("09:00"),
     [zone, setZone] = useState("city"),
     [comment, setComment] = useState("");
-  const [notice, setNotice] = useState(""),
-    [copying, setCopying] = useState(false),
-    [manualCopy, setManualCopy] = useState(false);
+  const [notice, setNotice] = useState("");
   const [minimumDate, setMinimumDate] = useState("");
   async function load() {
     setLoading(true);
@@ -85,20 +83,16 @@ export default function RentalSite() {
     machine && cost
       ? `Заявка на аренду спецтехники\nТехника: ${machine.name}\nАдрес: ${address}\nДата: ${date.split("-").reverse().join(".")}\nПодача: ${time}\nПродолжительность: ${hours} ч\nСтавка: ${money(machine.rate)}/ч\nДоставка: ${delivery.label}${delivery.price === null ? " — уточняется отдельно" : ` — ${money(delivery.price)}`}\nАренда: ${money(cost.rent)}\n${cost.total === null ? "Предварительная стоимость аренды" : "Предварительный итог"}: ${money(cost.total ?? cost.rent)}${cost.total === null ? " + доставка" : ""}\nКомментарий: ${comment || "Без комментария"}`
       : "";
-  async function copyRequest() {
-    setCopying(true);
-    setManualCopy(false);
-    try {
-      await navigator.clipboard.writeText(requestText);
-      setNotice("Заявка скопирована. Отправьте её владельцу в Telegram.");
-    } catch {
-      setManualCopy(true);
-      setNotice(
-        "Не удалось скопировать автоматически. Выделите и скопируйте текст ниже.",
-      );
-    } finally {
-      setCopying(false);
+  function sendRequest() {
+    const url = telegramDraftUrl(siteConfig.telegram, requestText);
+    if (!url) {
+      setNotice("Контакт владельца ещё не настроен.");
+      return;
     }
+    window.open(url, "_blank", "noopener,noreferrer");
+    setNotice(
+      "Заявка подготовлена. Подтвердите отправку в открывшемся чате Telegram.",
+    );
   }
   return (
     <>
@@ -298,7 +292,7 @@ export default function RentalSite() {
                     setNotice("Проверьте количество часов.");
                     return;
                   }
-                  void copyRequest();
+                  sendRequest();
                 }}
               >
                 <label className="field full">
@@ -436,7 +430,7 @@ export default function RentalSite() {
                   </span>
                   <div>
                     <small>РАСЧЁТ ЗАКАЗА</small>
-                    <h3>Итоговая стоимость</h3>
+                    <h3>Промежуточная стоимость</h3>
                   </div>
                 </div>
                 <dl>
@@ -475,17 +469,14 @@ export default function RentalSite() {
                   type="submit"
                   form="rental-form"
                   className="btn btn-primary"
-                  disabled={!machine || !cost || copying}
+                  disabled={!machine || !cost}
                 >
-                  <Copy size={17} />
-                  {copying ? "Копируем…" : "Скопировать заявку"}
+                  <Send size={17} />
+                  Отправить заявку
                   <ArrowRight size={17} />
                 </button>
-                <TelegramButton className="btn-dark-outline">
-                  Открыть Telegram <ArrowUpRight size={16} />
-                </TelegramButton>
                 <p className="summary-help">
-                  Скопируйте заявку и отправьте владельцу.
+                  Подтвердите отправку заявки в Telegram.
                   <br />
                   Расчёт предварительный, без бронирования.
                 </p>
@@ -495,16 +486,6 @@ export default function RentalSite() {
                 >
                   {notice}
                 </div>
-                {manualCopy && (
-                  <textarea
-                    className="manual-copy"
-                    aria-label="Текст заявки для ручного копирования"
-                    readOnly
-                    value={requestText}
-                    rows={10}
-                    onFocus={(e) => e.target.select()}
-                  />
-                )}
               </aside>
             </div>
           </div>

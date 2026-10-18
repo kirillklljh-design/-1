@@ -3,7 +3,7 @@ export const siteConfig = {
   logo: "Укажите логотип",
   company: "Аренда спецтехники",
   city: "Екатеринбург",
-  telegram: "", // username без @; пустая строка = контакт ещё не настроен
+  telegram: "aktiin", // username без @; пустая строка = контакт ещё не настроен
   delivery: [
     { id: "city", label: "В пределах города", price: null as number | null },
     {

@@ -545,7 +545,15 @@ p {
   min-width: 0;
   transition:
     border-color 0.2s,
-    box-shadow 0.2s;
+    box-shadow 0.2s,
+    transform 0.22s ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .machine-card:not(.skeleton):hover {
+    transform: scale(1.025);
+    box-shadow: 0 12px 32px #29392315;
+    z-index: 1;
+  }
 }
 .machine-card.selected {
   border-color: #b88f78;
@@ -2333,6 +2341,9 @@ select {
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .machine-card:not(.skeleton):hover {
+    transform: none;
+  }
   html {
     scroll-behavior: auto;
   }

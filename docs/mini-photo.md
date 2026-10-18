@@ -1,0 +1,7 @@
+# Восстановление фотографии мини-экскаватора
+
+Использован встроенный ImageGen, режим редактирования. Итог: `public/assets/photos/mini-restored.png`, 1672 × 941 px. Исходные фотографии остальных машин не изменялись. Детали реконструированы по исходной фотографии; это не исходник высокого разрешения.
+
+Источники: предоставленный пользователем скриншот размытой карточки и исходный скриншот каталога. Промпт:
+
+> Restore and redraw ONLY the mini excavator PHOTOGRAPH shown at the top of the first attached equipment card and in the LEFTMOST photograph of the second screenshot. Deliver one standalone high-resolution landscape photographic image, about 16:9, for that same website card. A compact yellow tracked mini excavator in a dirt construction plot, viewed from left front side, cabin at left center, boom rising toward upper right and descending to a bucket digging into earth at lower right; birch trees and countryside in the background, softly overcast daylight. Faithfully preserve the original machine type, yellow color, pose, dirt texture and scene composition. Reconstruct naturally sharp realistic photographic details to eliminate the pixelation in the reference. This is photo restoration, no illustration, no stylization. Absolutely no UI/card border, no text, no prices, no number badge, no selected badge or checkmark, no logos, no watermark, no typography. Show only the restored equipment photograph, with the whole machine and bucket comfortably inside the frame.

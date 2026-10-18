@@ -17,6 +17,20 @@ test("PostgreSQL RLS: только владелец управляет карт�
       grant usage on schema storage to anon,authenticated;
       grant select,insert,update,delete on storage.objects to anon,authenticated;`);
     await db.exec(await readFile("supabase/schema.sql", "utf8"));
+    await db.exec(
+      await readFile(
+        "supabase/migrations/20261018_minimum_two_hours.sql",
+        "utf8",
+      ),
+    );
+    assert.equal(
+      (
+        await db.query(
+          "select count(*)::int as count from public.machines where min_hours=2",
+        )
+      ).rows[0].count,
+      4,
+    );
     await db.exec(`insert into auth.users(id) values ('11111111-1111-4111-8111-111111111111'),('22222222-2222-4222-8222-222222222222');
       insert into public.site_owners(user_id) values ('11111111-1111-4111-8111-111111111111');`);
     await db.exec(`set role anon;`);

@@ -15,6 +15,14 @@ const browser = await chromium.launch({
 const context = await browser.newContext({
   permissions: ["clipboard-read", "clipboard-write"],
 });
+// Inspect outbound Telegram URLs without contacting the account or sending messages.
+await context.route("https://t.me/**", (r) =>
+  r.fulfill({
+    status: 200,
+    contentType: "text/html",
+    body: "<title>Telegram test</title>",
+  }),
+);
 const page = await context.newPage(),
   checks = [],
   errors = [];
@@ -52,6 +60,86 @@ try {
   await page.getByRole("link", { name: /Рассчитать стоимость/ }).click();
   assert.equal(new URL(page.url()).hash, "#calculator");
   pass("Переходы к каталогу и калькулятору");
+  assert.equal(await page.getByLabel("Количество часов").inputValue(), "2");
+  assert.equal(
+    await page.locator(".min-shift").filter({ hasText: "— 2 ч" }).count(),
+    4,
+  );
+  await page.getByLabel("Количество часов").fill("1");
+  assert.equal(
+    await page
+      .getByLabel("Количество часов")
+      .evaluate((e) => e.validity.rangeUnderflow),
+    true,
+  );
+  await page.getByLabel("Количество часов").fill("2");
+  for (const id of ["mini", "excavator", "loader", "truck"]) {
+    await page
+      .getByLabel("Выбранная техника", { exact: true })
+      .selectOption(id);
+    assert.equal(
+      await page.getByLabel("Количество часов").getAttribute("min"),
+      "2",
+    );
+    assert.equal(await page.getByLabel("Количество часов").inputValue(), "2");
+  }
+  pass("Минимальная смена 2 часа у всех машин и в калькуляторе");
+  const card = page.locator(".machine-card").first();
+  await card.hover();
+  await page.waitForFunction(() => {
+    const t = getComputedStyle(
+      document.querySelector(".machine-card"),
+    ).transform;
+    return t !== "none" && Number(t.split("(")[1].split(",")[0]) > 1.02;
+  });
+  await page.mouse.move(1, 1);
+  await page.waitForFunction(() => {
+    const t = getComputedStyle(
+      document.querySelector(".machine-card"),
+    ).transform;
+    return t === "none" || t === "matrix(1, 0, 0, 1, 0, 0)";
+  });
+  assert.equal(
+    await page.evaluate(() => document.documentElement.scrollWidth),
+    1440,
+  );
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await card.hover();
+  assert.equal(
+    await card.evaluate((e) => getComputedStyle(e).transform),
+    "none",
+  );
+  await page.mouse.move(1, 1);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  pass(
+    "Карточка увеличивается при наведении и возвращается без сдвигов; reduced motion соблюдён",
+  );
+  await page
+    .locator(".fleet-section")
+    .screenshot({ path: "outputs/vercel-qa/updated-fleet.png" });
+  assert.equal(
+    await page
+      .getByRole("heading", { name: "Промежуточная стоимость", exact: true })
+      .count(),
+    1,
+  );
+  assert.equal(
+    await page
+      .getByRole("heading", { name: "Итоговая стоимость", exact: true })
+      .count(),
+    0,
+  );
+  assert.equal(
+    await page.locator(".order-summary").getByRole("button").count(),
+    1,
+  );
+  assert.equal(
+    await page
+      .getByRole("button", { name: "Открыть Telegram", exact: true })
+      .count(),
+    0,
+  );
+  pass("Новый заголовок и единственная кнопка «Отправить заявку» в расчёте");
   await page
     .getByLabel("Выбранная техника", { exact: true })
     .selectOption("loader");
@@ -59,35 +147,44 @@ try {
   assert.match(await page.locator(".summary-total").innerText(), /25\s?600/);
   pass("Расчёт 3200 × 8 = 25 600 ₽");
   await page.getByLabel("Адрес объекта").fill("Тестовый адрес");
-  await page.getByRole("button", { name: "Скопировать заявку" }).click();
+  const [draft] = await Promise.all([
+    context.waitForEvent("page"),
+    page.getByRole("button", { name: "Отправить заявку" }).click(),
+  ]);
+  await draft.waitForLoadState("domcontentloaded");
+  const draftUrl = new URL(draft.url());
+  assert.equal(draftUrl.origin + draftUrl.pathname, "https://t.me/aktiin");
+  assert.match(draftUrl.searchParams.get("text"), /Фронтальный погрузчик/);
+  assert.match(draftUrl.searchParams.get("text"), /Тестовый адрес/);
+  assert.match(draftUrl.searchParams.get("text"), /25\s?600/);
+  await draft.close();
   await page
     .getByRole("status")
-    .filter({ hasText: "Заявка скопирована" })
+    .filter({ hasText: "Заявка подготовлена" })
     .waitFor();
-  assert.match(
-    await page.evaluate(() => navigator.clipboard.readText()),
-    /Фронтальный погрузчик/,
+  pass(
+    "Отправить заявку открывает @aktiin с полным текстом, без автоматической отправки",
   );
-  pass("Полная заявка копируется");
   for (const zone of ["city", "suburb", "remote"])
     await page.getByLabel("Зона доставки").selectOption(zone);
   pass("Три зоны доставки");
   for (const selector of [
     ".header-actions",
     ".hero-buttons",
-    ".order-summary",
     ".footer-links",
   ]) {
-    await page
-      .locator(selector)
-      .getByRole("button", { name: /Telegram/ })
-      .click();
-    await page
-      .getByRole("dialog", { name: "Контакт для заявок" })
-      .getByRole("button", { name: "Понятно" })
-      .click();
+    const [contact] = await Promise.all([
+      context.waitForEvent("page"),
+      page
+        .locator(selector)
+        .getByRole("button", { name: /Telegram/ })
+        .click(),
+    ]);
+    await contact.waitForLoadState("domcontentloaded");
+    assert.equal(contact.url(), "https://t.me/aktiin");
+    await contact.close();
   }
-  pass("Все четыре кнопки Telegram");
+  pass("Оставшиеся три кнопки Telegram ведут в @aktiin");
   for (const method of ["POST", "PUT", "DELETE"])
     assert.equal(
       (
@@ -135,18 +232,6 @@ try {
   pass("Нет входа с фиктивными данными");
   await page.getByRole("link", { name: /Открыть клиентскую страницу/ }).click();
   await page.locator(".machine-card:not(.skeleton)").nth(3).waitFor();
-  await page.evaluate(() =>
-    Object.defineProperty(navigator.clipboard, "writeText", {
-      value: async () => {
-        throw Error("Denied");
-      },
-      configurable: true,
-    }),
-  );
-  await page.getByLabel("Адрес объекта").fill("Адрес для ручного копирования");
-  await page.getByRole("button", { name: "Скопировать заявку" }).click();
-  await page.getByLabel("Текст заявки для ручного копирования").waitFor();
-  pass("Ручное копирование при отказе доступа к буферу");
   await page.route("**/api/machines", (r) =>
     r.fulfill({ status: 200, contentType: "application/json", body: "[]" }),
   );

@@ -8,6 +8,7 @@ export function isReferencePhoto(key: string) {
   return referenceImages.some((id) => key === `reference-${id}`);
 }
 export function photoUrl(key: string) {
+  if (key === "reference-mini") return "/assets/photos/mini-restored.png";
   return isReferencePhoto(key)
     ? `/assets/photos/${key.slice(10)}.svg`
     : `/media/${key}`;

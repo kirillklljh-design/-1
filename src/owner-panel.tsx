@@ -89,7 +89,7 @@ export default function OwnerPanel() {
             name: "",
             description: "",
             rate: 2500,
-            minHours: 4,
+            minHours: 2,
             imageKey: null,
             visible: true,
             sortOrder: 0,

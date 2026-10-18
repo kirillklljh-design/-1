@@ -9,7 +9,7 @@
     "dev": "next dev --hostname 127.0.0.1",
     "build": "next build --webpack",
     "start": "next start --hostname 127.0.0.1",
-    "test": "node --test tests/rental.test.mjs tests/adaptation.test.mjs tests/rls.test.mjs"
+    "test": "node --test tests/rental.test.mjs tests/adaptation.test.mjs tests/rls.test.mjs tests/request-updates.test.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
