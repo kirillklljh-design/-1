@@ -403,11 +403,14 @@ export default function RentalSite() {
                     {siteConfig.delivery.map((z) => (
                       <option key={z.id} value={z.id}>
                         {z.label}
-                        {z.price !== null ? ` — ${money(z.price)}` : ""}
+                        {z.price === 0
+                          ? " — бесплатно"
+                          : z.price !== null
+                            ? ` — ${money(z.price)}`
+                            : ""}
                       </option>
                     ))}
                   </select>
-                  <small>Стоимость доставки уточняется по адресу</small>
                 </label>
                 <label className="field full">
                   Комментарий <span className="optional">необязательно</span>
@@ -451,7 +454,9 @@ export default function RentalSite() {
                     <dd>
                       {delivery.price === null
                         ? "Уточняется"
-                        : money(delivery.price)}
+                        : delivery.price === 0
+                          ? "Бесплатно"
+                          : money(delivery.price)}
                     </dd>
                   </div>
                 </dl>
@@ -459,12 +464,6 @@ export default function RentalSite() {
                   <span>{delivery.price === null ? "Аренда от" : "Итого"}</span>
                   <strong>{cost ? money(cost.total ?? cost.rent) : "—"}</strong>
                 </div>
-                {delivery.price === null && (
-                  <p className="delivery-note">
-                    + доставка. Её стоимость согласуем отдельно по адресу
-                    объекта.
-                  </p>
-                )}
                 <button
                   type="submit"
                   form="rental-form"

@@ -22,8 +22,8 @@ test("Все исходные машины доступны от двух час
 });
 test("Telegram получает адресата и полный текст без потери спецсимволов", () => {
   const text = "Заявка\nАдрес: улица & дом + 2\nКомментарий: #1 ?";
-  const url = new URL(telegramDraftUrl("@aktiin", text));
-  assert.equal(url.origin + url.pathname, "https://t.me/aktiin");
+  const url = new URL(telegramDraftUrl("@aktiiin", text));
+  assert.equal(url.origin + url.pathname, "https://t.me/aktiiin");
   assert.equal(url.searchParams.get("text"), text);
   assert.equal(telegramDraftUrl("", text), null);
   assert.equal(telegramDraftUrl("evil.test/path", text), null);

@@ -153,7 +153,7 @@ try {
   ]);
   await draft.waitForLoadState("domcontentloaded");
   const draftUrl = new URL(draft.url());
-  assert.equal(draftUrl.origin + draftUrl.pathname, "https://t.me/aktiin");
+  assert.equal(draftUrl.origin + draftUrl.pathname, "https://t.me/aktiiin");
   assert.match(draftUrl.searchParams.get("text"), /Фронтальный погрузчик/);
   assert.match(draftUrl.searchParams.get("text"), /Тестовый адрес/);
   assert.match(draftUrl.searchParams.get("text"), /25\s?600/);
@@ -163,11 +163,15 @@ try {
     .filter({ hasText: "Заявка подготовлена" })
     .waitFor();
   pass(
-    "Отправить заявку открывает @aktiin с полным текстом, без автоматической отправки",
+    "Отправить заявку открывает @aktiiin с полным текстом, без автоматической отправки",
   );
-  for (const zone of ["city", "suburb", "remote"])
+  for (const [zone, expected] of [["city", "25 600 ₽"], ["suburb", "28 600 ₽"], ["remote", "30 600 ₽"]]) {
     await page.getByLabel("Зона доставки").selectOption(zone);
-  pass("Три зоны доставки");
+    assert.equal((await page.locator(".summary-total strong").innerText()).replace(/\s/g, " "), expected);
+  }
+  assert.equal(await page.getByText("Стоимость доставки уточняется по адресу", {exact:true}).count(), 0);
+  assert.equal(await page.locator(".delivery-note").count(), 0);
+  pass("Доставка 0 / 3000 / 5000 включена в итог, текст отдельного согласования удалён");
   for (const selector of [
     ".header-actions",
     ".hero-buttons",
@@ -181,10 +185,10 @@ try {
         .click(),
     ]);
     await contact.waitForLoadState("domcontentloaded");
-    assert.equal(contact.url(), "https://t.me/aktiin");
+    assert.equal(contact.url(), "https://t.me/aktiiin");
     await contact.close();
   }
-  pass("Оставшиеся три кнопки Telegram ведут в @aktiin");
+  pass("Оставшиеся три кнопки Telegram ведут в @aktiiin");
   for (const method of ["POST", "PUT", "DELETE"])
     assert.equal(
       (
