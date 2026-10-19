@@ -60,6 +60,7 @@ npm run build
 ```sh
 # С работающим production-сервером на 127.0.0.1:5173 без Supabase:
 node tests/browser.mjs
+node tests/mobile-contact.mjs
 # Сам поднимает изолированный HTTP-имитатор Supabase и Next dev на 5174:
 node tests/owner-integration.mjs
 ```

@@ -1446,7 +1446,8 @@ select {
   padding: 20px;
 }
 .contact-dialog {
-  position: relative;
+  position: fixed;
+  inset: 0;
   width: 440px;
   padding: 35px;
 }
