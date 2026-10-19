@@ -81,7 +81,7 @@ export default function RentalSite() {
   };
   const requestText =
     machine && cost
-      ? `Заявка на аренду спецтехники\nТехника: ${machine.name}\nАдрес: ${address}\nДата: ${date.split("-").reverse().join(".")}\nПодача: ${time}\nПродолжительность: ${hours} ч\nСтавка: ${money(machine.rate)}/ч\nДоставка: ${delivery.label}${delivery.price === null ? " — уточняется отдельно" : ` — ${money(delivery.price)}`}\nАренда: ${money(cost.rent)}\n${cost.total === null ? "Предварительная стоимость аренды" : "Предварительный итог"}: ${money(cost.total ?? cost.rent)}${cost.total === null ? " + доставка" : ""}\nКомментарий: ${comment || "Без комментария"}`
+      ? `Заявка на аренду спецтехники\nТехника: ${machine.name}\nАдрес: ${address}\nДата: ${date.split("-").reverse().join(".")}\nПодача: ${time}\nВремя работы: ${hours} ч\nСтавка: ${money(machine.rate)}/ч\nДоставка: ${delivery.label}${delivery.price === null ? " — уточняется отдельно" : ` — ${money(delivery.price)}`}\nАренда: ${money(cost.rent)}\n${cost.total === null ? "Предварительная стоимость аренды" : "Предварительный итог"}: ${money(cost.total ?? cost.rent)}${cost.total === null ? " + доставка" : ""}\nКомментарий: ${comment || "Без комментария"}`
       : "";
   function sendRequest() {
     const url = telegramDraftUrl(siteConfig.telegram, requestText);
@@ -136,7 +136,7 @@ export default function RentalSite() {
             <div className="hero-visual">
               <img
                 className="hero-photo"
-                src="/assets/photos/hero.svg"
+                src="/assets/photos/hero-restored.png"
                 alt="Гусеничный экскаватор на строительном объекте"
                 fetchPriority="high"
               />
@@ -442,7 +442,7 @@ export default function RentalSite() {
                     <dd>{machine?.name || "Не выбрана"}</dd>
                   </div>
                   <div>
-                    <dt>Продолжительность</dt>
+                    <dt>Время работы</dt>
                     <dd>{hours || "—"} ч</dd>
                   </div>
                   <div>

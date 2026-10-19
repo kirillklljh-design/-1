@@ -1,0 +1,7 @@
+# Восстановление фотографии первого экрана
+
+Встроенный ImageGen, режим редактирования. Итог: public/assets/photos/hero-restored.png (1368 × 1149 px). Исходник: область hero.svg, отрисованная в outputs/imagegen/hero-original.png. Фотография карточки экскаватора использована только как образец яркости и детализации. Композиция и ракурс сохранены; мелкие детали реконструированы.
+
+Промпт:
+
+Use case: lighting-weather / faithful photo restoration. Image 1 is the EDIT TARGET: original low-resolution nearly square hero photograph of a yellow tracked excavator with cabin on the right and boom reaching the upper left, urban construction site, dirt foreground and skyline. Image 2 is COLOR and DETAIL QUALITY REFERENCE ONLY from the catalog; do not copy its composition or replace the target with it. Restore image 1 faithfully at high resolution, keeping EXACT same machine, cabin location, boom curve, framing/crop, skyline, construction layout and camera angle. Do not add a bucket or reveal parts outside the original frame. Only improve photographic sharpness, natural fine detail and brighten exposure moderately, with clear midtones, rich realistic yellow paint, neutral overcast daylight and moderate contrast matching image 2. Remove baked-in dark green shading/vignette from the left side, this is applied by CSS separately. This must remain recognizably the same photograph, not a redesign or new scene. Preserve approximately 486:407 aspect ratio, output at least 1500 pixels wide. No text, UI, logos, watermark, labels, new machines or additional objects.

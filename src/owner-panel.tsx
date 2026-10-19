@@ -238,11 +238,7 @@ export default function OwnerPanel() {
             <strong>{machines.filter((m) => m.visible).length}</strong>
             <span>показываются на сайте</span>
           </div>
-          <p>
-            Цены указаны в рублях.
-            <br />
-            Изменения появляются после сохранения.
-          </p>
+          <p>Изменения появляются после сохранения.</p>
         </div>
         <div className="owner-list-heading">
           <h2>Карточки техники</h2>
@@ -361,10 +357,6 @@ export default function OwnerPanel() {
             ))}
           </div>
         )}
-        <div className="owner-bottom-note">
-          Логотип, контакты и тарифы доставки настраиваются при подготовке сайта
-          под компанию.
-        </div>
       </main>
       <dialog
         ref={dialog}
@@ -480,6 +472,7 @@ export default function OwnerPanel() {
                 <label className="field">
                   Цена за час, ₽
                   <input
+                    className="price-input"
                     type="number"
                     required
                     min="0.01"

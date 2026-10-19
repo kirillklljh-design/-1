@@ -71,6 +71,8 @@ try {
   await page.getByRole("heading", { name: "Рабочий кабинет" }).waitFor();
   await page.locator(".owner-card:not(.skeleton)").nth(3).waitFor();
   pass("Вход владельца с cookie-сессией");
+  assert.equal(await page.getByText("Цены указаны в рублях.", { exact: true }).count(), 0);
+  assert.equal(await page.locator(".owner-bottom-note").count(), 0);
   for (const width of [360, 390, 768, 1280, 1440]) {
     await page.setViewportSize({ width, height: 1000 });
     assert.equal(
@@ -91,6 +93,9 @@ try {
     .getByLabel("Описание", { exact: true })
     .fill("Проверка миграции на Vercel");
   await page.getByLabel("Цена за час, ₽").fill("4100");
+  assert.equal(await page.getByLabel("Цена за час, ₽").inputValue(), "4100");
+  assert.equal(await page.getByLabel("Цена за час, ₽").evaluate(e => getComputedStyle(e).appearance), "textfield");
+  pass("Цена вводится вручную без стрелок, служебные подписи удалены");
   await page.getByLabel("Минимальная смена, ч").fill("6");
   const image = await page.screenshot({
     clip: { x: 0, y: 0, width: 20, height: 20 },
@@ -98,6 +103,7 @@ try {
   await page
     .getByLabel("Фотография техники", { exact: true })
     .setInputFiles({ name: "test.png", mimeType: "image/png", buffer: image });
+  await page.locator(".editor-dialog").screenshot({path:"outputs/vercel-qa/owner-price-manual.png"});
   await page.getByRole("button", { name: "Сохранить карточку" }).click();
   await page
     .getByRole("heading", { name: "Проверочная машина", exact: true })
@@ -207,7 +213,7 @@ try {
     JSON.stringify(
       {
         checks,
-        note: "Supabase HTTP test double; real hosted Supabase has not been connected.",
+        note: "These checks use an isolated Supabase HTTP test double; no production records were changed.",
       },
       null,
       2,

@@ -140,6 +140,8 @@ try {
     0,
   );
   pass("Новый заголовок и единственная кнопка «Отправить заявку» в расчёте");
+  assert.equal(await page.locator(".order-summary dt").filter({hasText:"Время работы"}).count(), 1);
+  assert.equal(await page.locator(".order-summary dt").filter({hasText:"Продолжительность"}).count(), 0);
   await page
     .getByLabel("Выбранная техника", { exact: true })
     .selectOption("loader");
