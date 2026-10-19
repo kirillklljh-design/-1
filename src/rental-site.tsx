@@ -165,12 +165,7 @@ export default function RentalSite() {
               </span>
               <p>
                 <strong>Подача от 2 часов</strong>
-                <small>
-                  По{" "}
-                  {siteConfig.city === "Екатеринбург"
-                    ? "Екатеринбургу"
-                    : siteConfig.city}
-                </small>
+                <small>По {siteConfig.cityDative}</small>
               </p>
             </div>
             <div>

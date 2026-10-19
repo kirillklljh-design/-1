@@ -2,7 +2,8 @@
 export const siteConfig = {
   logo: "Ваш логотип",
   company: "Аренда спецтехники",
-  city: "Екатеринбург",
+  city: "Нижний Новгород",
+  cityDative: "Нижнему Новгороду",
   telegram: "", // username без @; пустая строка = контакт ещё не настроен
   telegramPlaceholder: "Здесь мы укажем ваш Телеграм",
   delivery: [

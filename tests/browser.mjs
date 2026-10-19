@@ -37,6 +37,14 @@ try {
   await page.goto(base);
   await page.locator(".machine-card:not(.skeleton)").nth(3).waitFor();
   await page.evaluate(() => document.fonts.ready);
+  // Start lazy image loading before checking all photos at each screen width.
+  await page.locator(".fleet-section").scrollIntoViewIfNeeded();
+  await page.waitForFunction(() =>
+    [...document.querySelectorAll(".machine-image img,.hero-photo")].every(
+      i => i.complete && i.naturalWidth > 0,
+    ),
+  );
+  await page.evaluate(() => window.scrollTo(0, 0));
   for (const width of [360, 390, 768, 1280, 1440]) {
     await page.setViewportSize({ width, height: 1000 });
     await page.waitForFunction(() =>
