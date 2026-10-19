@@ -1,9 +1,10 @@
 // Эти настройки меняет разработчик при подготовке сайта для нового клиента.
 export const siteConfig = {
-  logo: "Укажите логотип",
+  logo: "Ваш логотип",
   company: "Аренда спецтехники",
   city: "Екатеринбург",
-  telegram: "aktiiin", // username без @; пустая строка = контакт ещё не настроен
+  telegram: "", // username без @; пустая строка = контакт ещё не настроен
+  telegramPlaceholder: "Здесь мы укажем ваш Телеграм",
   delivery: [
     { id: "city", label: "В пределах города", price: 0 as number | null },
     {

@@ -86,7 +86,7 @@ export default function RentalSite() {
   function sendRequest() {
     const url = telegramDraftUrl(siteConfig.telegram, requestText);
     if (!url) {
-      setNotice("Контакт владельца ещё не настроен.");
+      setNotice(siteConfig.telegramPlaceholder);
       return;
     }
     window.open(url, "_blank", "noopener,noreferrer");
@@ -475,7 +475,9 @@ export default function RentalSite() {
                   <ArrowRight size={17} />
                 </button>
                 <p className="summary-help">
-                  Подтвердите отправку заявки в Telegram.
+                  {siteConfig.telegram
+                    ? "Подтвердите отправку заявки в Telegram."
+                    : siteConfig.telegramPlaceholder}
                   <br />
                   Расчёт предварительный, без бронирования.
                 </p>

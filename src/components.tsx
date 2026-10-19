@@ -73,10 +73,9 @@ export function TelegramButton({
           <X size={21} />
         </button>
         <span className="section-kicker">КОНТАКТ ДЛЯ ЗАЯВОК</span>
-        <h2>Telegram пока не указан</h2>
+        <h2>{siteConfig.telegramPlaceholder}</h2>
         <p>
-          Это первая версия сайта. Контакт владельца добавим при настройке под
-          компанию. Пока можно рассчитать аренду и скопировать заявку.
+          Контакт добавим при настройке сайта под вашу компанию.
         </p>
         <button className="btn btn-primary" onClick={() => setOpen(false)}>
           Понятно <ArrowUpRight size={18} />

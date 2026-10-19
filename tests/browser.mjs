@@ -53,6 +53,12 @@ try {
       path: `outputs/vercel-qa/site-${width}.png`,
       fullPage: true,
     });
+    await page.locator(".header-actions").getByRole("button", {name:/Telegram/}).click();
+    const contact = page.getByRole("dialog", {name:"Контакт для заявок"});
+    await contact.getByRole("heading", {name:"Здесь мы укажем ваш Телеграм",exact:true}).waitFor();
+    assert.equal(await contact.evaluate(e=>e.scrollWidth<=e.clientWidth), true);
+    await contact.screenshot({path:`outputs/vercel-qa/telegram-${width}.png`});
+    await contact.getByRole("button", {name:"Закрыть",exact:true}).click();
     pass(`Фотографии загружены, без горизонтальной прокрутки: ${width}px`);
   }
   await page.getByRole("link", { name: /Подобрать технику/ }).click();
@@ -149,23 +155,13 @@ try {
   assert.match(await page.locator(".summary-total").innerText(), /25\s?600/);
   pass("Расчёт 3200 × 8 = 25 600 ₽");
   await page.getByLabel("Адрес объекта").fill("Тестовый адрес");
-  const [draft] = await Promise.all([
-    context.waitForEvent("page"),
-    page.getByRole("button", { name: "Отправить заявку" }).click(),
-  ]);
-  await draft.waitForLoadState("domcontentloaded");
-  const draftUrl = new URL(draft.url());
-  assert.equal(draftUrl.origin + draftUrl.pathname, "https://t.me/aktiiin");
-  assert.match(draftUrl.searchParams.get("text"), /Фронтальный погрузчик/);
-  assert.match(draftUrl.searchParams.get("text"), /Тестовый адрес/);
-  assert.match(draftUrl.searchParams.get("text"), /25\s?600/);
-  await draft.close();
+  await page.getByRole("button", { name: "Отправить заявку" }).click();
   await page
     .getByRole("status")
-    .filter({ hasText: "Заявка подготовлена" })
+    .filter({ hasText: "Здесь мы укажем ваш Телеграм" })
     .waitFor();
   pass(
-    "Отправить заявку открывает @aktiiin с полным текстом, без автоматической отправки",
+    "Заявка без настроенного контакта показывает заглушку и не открывает чужой чат",
   );
   for (const [zone, expected] of [["city", "25 600 ₽"], ["suburb", "28 600 ₽"], ["remote", "30 600 ₽"]]) {
     await page.getByLabel("Зона доставки").selectOption(zone);
@@ -179,18 +175,14 @@ try {
     ".hero-buttons",
     ".footer-links",
   ]) {
-    const [contact] = await Promise.all([
-      context.waitForEvent("page"),
-      page
-        .locator(selector)
-        .getByRole("button", { name: /Telegram/ })
-        .click(),
-    ]);
-    await contact.waitForLoadState("domcontentloaded");
-    assert.equal(contact.url(), "https://t.me/aktiiin");
-    await contact.close();
+    await page.locator(selector).getByRole("button", { name: /Telegram/ }).click();
+    const contact = page.getByRole("dialog", {name:"Контакт для заявок"});
+    await contact.getByRole("heading", {name:"Здесь мы укажем ваш Телеграм", exact:true}).waitFor();
+    await contact.getByRole("button", {name:"Понятно"}).click();
   }
-  pass("Оставшиеся три кнопки Telegram ведут в @aktiiin");
+  assert.equal(context.pages().length, 1);
+  assert.equal(await page.getByText("Ваш логотип", {exact:true}).count(), 2);
+  pass("Все три кнопки Telegram показывают заглушку, логотип в шапке и подвале заменён");
   for (const method of ["POST", "PUT", "DELETE"])
     assert.equal(
       (
